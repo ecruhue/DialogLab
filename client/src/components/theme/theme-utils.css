@@ -1,0 +1,308 @@
+/* Theme-specific utility classes */
+
+/* Background colors */
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.theme-bg-panel {
+  background-color: var(--bg-panel);
+}
+
+.theme-bg-input {
+  background-color: var(--bg-input);
+}
+
+.theme-bg-button {
+  background-color: var(--bg-button);
+}
+
+.theme-bg-hover {
+  background-color: var(--bg-hover);
+}
+
+.theme-bg-tooltip {
+  background-color: var(--bg-tooltip);
+}
+
+.theme-bg-accent {
+  background-color: var(--bg-accent);
+}
+
+.theme-bg-accent-hover {
+  background-color: var(--primary-accent-hover);
+}
+
+.theme-bg-accent-light {
+  background-color: var(--bg-accent-light);
+}
+
+.theme-bg-accent-secondary {
+  background-color: var(--bg-accent-secondary);
+}
+
+.theme-bg-error {
+  background-color: var(--bg-error);
+}
+
+.theme-bg-error-light {
+  background-color: var(--bg-error);
+  opacity: 0.5;
+}
+
+.theme-bg-warning-light {
+  background-color: var(--bg-warning-light);
+}
+
+.theme-bg-success {
+  background-color: var(--bg-success);
+}
+
+.theme-bg-info {
+  background-color: var(--bg-info);
+}
+
+.theme-bg-opacity-75 {
+  background-color: var(--bg-opacity-75);
+}
+
+/* Text colors */
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.theme-text-inverse {
+  color: var(--text-inverse);
+}
+
+.theme-text-error {
+  color: var(--text-error);
+}
+
+.theme-text-warning {
+  color: var(--text-warning);
+}
+
+.theme-text-success {
+  color: var(--text-success);
+}
+
+.theme-text-accent {
+  color: var(--text-accent);
+}
+
+.theme-text-info-contrast {
+  color: var(--text-info-contrast);
+}
+
+.theme-text-success-contrast {
+  color: var(--text-success-contrast);
+}
+
+.theme-text-accent-contrast {
+  color: var(--text-accent-contrast);
+}
+
+/* Border colors */
+.theme-border {
+  border-color: var(--border-color);
+}
+
+.theme-border-light {
+  border-color: var(--border-color-light);
+}
+
+.theme-border-primary {
+  border-color: var(--border-primary);
+}
+
+.theme-border-secondary {
+  border-color: var(--border-secondary);
+}
+
+.theme-border-warning {
+  border-color: var(--border-warning);
+}
+
+.theme-border-success {
+  border-color: var(--border-success);
+}
+
+.theme-border-error {
+  border-color: var(--border-error);
+}
+
+.theme-border-accent {
+  border-color: var(--primary-accent);
+}
+
+.theme-border-b-secondary-accent {
+  border-bottom-color: var(--border-secondary-accent);
+}
+
+.theme-ring {
+  border-color: var(--ring);
+}
+
+.theme-ring-opacity-5 {
+  border-color: var(--ring-opacity-5);
+}
+
+/* Button states */
+.theme-button:hover {
+  background-color: var(--bg-button-hover);
+}
+
+.theme-button-primary {
+  background-color: var(--primary-accent);
+  color: white;
+}
+
+.theme-button-primary:hover {
+  background-color: var(--primary-accent-hover);
+}
+
+/* Additional utility classes for common components */
+.theme-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+}
+
+.theme-dropdown {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.theme-dropdown option {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.theme-input {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.theme-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Shadow utilities */
+.theme-shadow-sm {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.theme-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.theme-shadow-md {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.theme-shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus states */
+.theme-focus-ring {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
+/* PreviewPanel specific classes */
+.theme-bg-light {
+  background-color: var(--bg-light);
+}
+
+.theme-bg-human {
+  background-image: var(--bg-human);
+}
+
+.theme-bg-human-light {
+  background-color: var(--bg-human-light);
+}
+
+.theme-text-human {
+  color: var(--text-human);
+}
+
+.theme-border-human {
+  border-color: var(--border-human);
+}
+
+.theme-bg-human-indicator {
+  background-image: var(--bg-human-indicator);
+}
+
+.theme-bg-proactive {
+  background-image: var(--bg-proactive);
+}
+
+.theme-text-proactive {
+  color: var(--text-proactive);
+}
+
+.theme-border-proactive {
+  border-color: var(--border-proactive);
+}
+
+.theme-bg-proactive-indicator {
+  background-image: var(--bg-proactive-indicator);
+}
+
+.theme-bg-derailing {
+  background-image: var(--bg-derailing);
+}
+
+.theme-bg-derailing-light {
+  background-color: var(--bg-derailing-light);
+}
+
+.theme-text-derailing {
+  color: var(--text-derailing);
+}
+
+.theme-border-derailing {
+  border-color: var(--border-derailing);
+}
+
+.theme-bg-derailing-indicator {
+  background-image: var(--bg-derailing-indicator);
+}
+
+.theme-bg-standard-indicator {
+  background-image: var(--bg-standard-indicator);
+}
+
+.theme-bg-system-message {
+  background-image: var(--bg-system-message);
+}
+
+.theme-text-system-message {
+  color: var(--text-system-message);
+}
+
+.theme-border-system-message {
+  border-color: var(--border-system-message);
+} 

@@ -1,0 +1,612 @@
+/* TalkingHead.css */
+body, html { 
+  width: 100%; 
+  height: 100%; 
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.talking-head-container {
+  width: 100%;
+  height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.talking-head-container.editor-open {
+  width: calc(100% - 300px);
+  margin-right: 300px;
+}
+
+.avatar-instance.editor-open{
+  /* aspect-ratio: 16 / 9; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatars-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 50px);
+  margin-top: 50px;
+  transition: all 0.3s ease;
+}
+
+.avatar-instance {
+  flex: 1;
+  position: relative;
+  height: 30%;
+  min-height: 200px;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color-light);
+}
+
+.avatar-instance canvas {
+  aspect-ratio: 4/5;
+  width: 100% !important;
+  height: 100% !important;
+  transition: all 0.3s ease;
+  bottom: 0px;
+}
+
+.avatar-instance {
+  /* aspect-ratio: 16 / 9; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Update controls to stay within container */
+#controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 40px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+/* Editor panel styles */
+/* .avatar-editor-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  background-color: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  z-index: 1000;
+  overflow-y: auto;
+  color: white;
+  transition: transform 0.3s ease;
+} */
+
+
+#avatar-select {
+  height: 100%;
+  min-width: 120px;
+  padding: 0 10px;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+#text { 
+  flex: 1;
+  height: 100%;
+  padding: 0 10px;
+  font-family: Arial; 
+  font-size: 16px; 
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+#speak { 
+  height: 100%;
+  width: 100px;
+  font-family: Arial; 
+  font-size: 16px; 
+  background-color: var(--primary-accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#thumbs-up {
+  height: 100%;
+  width: 100px;
+  background-color: var(--success);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: Arial;
+  font-size: 16px;
+}
+
+#loading { 
+  position: absolute; 
+  bottom: 10px; 
+  left: 10px; 
+  right: 10px; 
+  height: 40px; 
+  font-family: Arial; 
+  font-size: 16px; 
+  z-index: 10;
+}
+
+
+.avatar-instance {
+  flex: 1;
+  height: 50%;
+  min-height: 300px;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color-light);
+}
+
+.avatar-instance:hover {
+  border-color: var(--border-color-hover);
+}
+
+.avatar-instance.selected {
+  border-color: var(--border-color-selected);
+}
+
+.avatar-instance:hover .avatar-name {
+  opacity: 1 !important;
+}
+
+/* Highlight effect when clicking */
+.avatar-instance:active {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.app-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 50px);
+  background-color: var(--bg-primary);
+  margin-top: 45px;
+}
+
+.avatar-section {
+  flex: 1;
+  position: relative;
+}
+
+/* Update existing styles to work with new layout */
+.talking-head-container {
+  height: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.avatars-container {
+  height: calc(100% - 60px);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+
+/* Avatar Editor Panel Styles */
+.avatar-editor-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background-color: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  color: white;
+}
+
+.avatar-editor-panel.visible {
+  transform: translateX(0);
+}
+
+
+.avatar-instance {
+  flex: 1;
+  position: relative;  /* Add this */
+  height: 50%;
+  min-height: 300px;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color-light);
+}
+
+.editor-header {
+  padding: 16px;
+  background-color: #333;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editor-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 16px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.editor-content {
+  padding: 16px;
+  overflow-y: auto;
+  height: calc(100% - 60px);
+}
+
+.editor-section {
+  margin-bottom: 24px;
+}
+
+.editor-section h4 {
+  margin: 0 0 12px 0;
+  color: white;
+  font-size: 14px;
+}
+
+.emotion-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.emotion-button {
+  padding: 8px;
+  background-color: #333;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.emotion-button:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.voice-select {
+  width: 100%;
+  padding: 8px;
+  background-color: #333;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+}
+
+.camera-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.camera-button {
+  padding: 8px;
+  background-color: #333;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.camera-button:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.avatar-instance canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.avatar-instance:hover {
+  border-color: var(--border-color-hover);
+}
+
+.avatar-instance.selected {
+  border-color: var(--border-color-selected);
+}
+
+
+.preview-header {
+  background-color: var(--bg-tertiary);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.mode-toggle {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  background-color: var(--bg-panel);
+  border-radius: 0 8px 8px 0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.mode-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #333;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 80px;
+}
+
+.mode-button:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.mode-button.active {
+  background-color: var(--secondary-accent);
+  color: white;
+}
+
+.mode-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.mode-text {
+  font-size: 12px;
+  text-align: center;
+}
+
+.main-content {
+  flex: 1;
+  /* margin-left: 100px;  */
+  display: flex;
+  flex-direction: column;
+  /* padding: 4px; */
+}
+
+.experience-mode {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: var(--text-primary);
+}
+
+.experience-content {
+  background-color: var(--bg-panel);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #404040;
+}
+
+
+
+.panel-manager {
+  /* position: fixed; */
+  left: 0;
+  top: 50px;
+  width: 200px;
+  height: 100vh;
+  /* background-color: #2c3e50; */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.panel-manager h3 {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.panel-manager button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  background-color: var(--bg-tertiary);
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.panel-manager button:hover {
+  background-color: var(--bg-success);
+}
+
+
+
+/* button {
+  margin-top: 5px;
+  right:0px;
+  padding: 6px 10px;
+  border: none;
+  cursor: pointer;
+  background: var(--bg-success);
+  color: white;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: var(--primary-accent-hover);
+} */
+
+/* Topic Panel Styling */
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* padding: 12px 16px; */
+  background-color: var(--bg-panel);
+  color: #fff;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  font-weight: 500;
+}
+
+.preview-header .edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.preview-header .edit-btn:hover {
+  color: #fff;
+}
+
+.preview-header .edit-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.panel-manager-toggle {
+  position: fixed;
+  top: 50px;
+  left: 20px;
+  z-index: 100;
+  padding: 8px 16px;
+  background-color: var(--bg-tertiary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.panel-manager-toggle:hover {
+  background-color: var(--bg-panel);
+}
+
+.panel-manager-toggle:active {
+  transform: translateY(1px);
+}
+
+.panel-manager-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+}
+
+/* Scene Awareness Content */
+.scene-awareness-content {
+  height: 100%;
+  overflow-y: auto;
+  /* background-color: #f8f9fa; */
+  border-radius: 4px;
+}
+
+.scene-thumbnails-row {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  padding-bottom: 8px;
+}
+
+.scene-thumbnails-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scene-thumbnails-row::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 3px;
+}
+
+.scene-thumbnails-row::-webkit-scrollbar-thumb {
+  background-color: var(--bg-hover);
+  border-radius: 3px;
+}
+
+.scene-thumbnail {
+  display: flex;
+  flex-direction: column;
+  /* background-color: white; */
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 196px; /* 180px content + 16px padding */
+}
+
+.scene-thumbnail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.scene-thumbnail .aspect-video {
+  height: 100px;
+}
+
+/* Add a special style for avatar config scenes */
+.scene-thumbnail[data-is-avatar-config="true"] {
+  background-color: var(--bg-accent-light);
+  border: 1px solid var(--border-color-light);
+}
+
+/* Add a special indicator for the active scene */
+.scene-thumbnail.active {
+  border: 2px solid var(--bg-accent);
+}

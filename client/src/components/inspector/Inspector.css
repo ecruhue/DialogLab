@@ -1,0 +1,39 @@
+.inspector {
+    position: relative; 
+    width: 330px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--error);
+    color: var(--text-inverse);
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+  }
+
+  .avatar-inspector {
+    padding: 1rem;
+    background-color: var(--bg-tertiary);
+    border-radius: 0.5rem;
+  }
+
+  option {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+
+  .preview-header {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
