@@ -134,6 +134,11 @@ const TalkingHeadComponent = () => {
     }
   };
 
+  // Expose avatar instances ref globally for audio context management
+  useEffect(() => {
+    window.avatarInstancesRef = avatarInstancesRef;
+  }, []);
+
   const handleTopicChange = (topic) => {
     setCurrentTopic(topic);
     
@@ -950,6 +955,38 @@ const TalkingHeadComponent = () => {
       setConversationMode(conversationMode);
     }
   };
+
+  // Resume AudioContext on user interaction (required by browser policies)
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      // Find all audio contexts and resume them
+      const audioContexts = document.querySelectorAll('[data-audio-context]');
+      
+      // Also try to resume any TalkingHead instances
+      if (window.avatarInstancesRef?.current) {
+        Object.values(window.avatarInstancesRef.current).forEach(instance => {
+          if (instance?.audioCtx && instance.audioCtx.state === 'suspended') {
+            instance.audioCtx.resume().catch(e => console.log('AudioContext resume failed:', e));
+          }
+        });
+      }
+      
+      // Remove listener after first interaction
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+
+    document.addEventListener('click', handleUserInteraction, { once: true });
+    document.addEventListener('touchstart', handleUserInteraction, { once: true });
+    document.addEventListener('keydown', handleUserInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+  }, []);
 
   return (
     <>

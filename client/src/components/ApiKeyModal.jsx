@@ -82,12 +82,31 @@ const ApiKeyModal = ({ missing, provider = 'gemini', onSelectProvider, onClose, 
   };
 
   useEffect(() => {
-    const storedOpenAI = localStorage.getItem('OPENAI_API_KEY') || '';
-    const storedGemini = localStorage.getItem('GEMINI_API_KEY') || '';
-    const storedTts = localStorage.getItem('TTS_API_KEY') || '';
-    setOpenaiKey(storedOpenAI);
-    setGeminiKey(storedGemini);
-    setTtsKey(storedTts);
+    // Try to load from server first, then fall back to localStorage
+    const loadKeys = async () => {
+      try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/llm-keys`);
+        if (response.ok) {
+          const data = await response.json();
+          setOpenaiKey(data.openai || localStorage.getItem('OPENAI_API_KEY') || '');
+          setGeminiKey(data.gemini || localStorage.getItem('GEMINI_API_KEY') || '');
+          setTtsKey(data.tts || localStorage.getItem('TTS_API_KEY') || '');
+          return;
+        }
+      } catch (error) {
+        console.log('Could not fetch keys from server, using localStorage');
+      }
+      
+      // Fallback to localStorage
+      const storedOpenAI = localStorage.getItem('OPENAI_API_KEY') || '';
+      const storedGemini = localStorage.getItem('GEMINI_API_KEY') || '';
+      const storedTts = localStorage.getItem('TTS_API_KEY') || '';
+      setOpenaiKey(storedOpenAI);
+      setGeminiKey(storedGemini);
+      setTtsKey(storedTts);
+    };
+    
+    loadKeys();
   }, [provider]);
 
   return (

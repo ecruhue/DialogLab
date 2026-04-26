@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Plus, X, Trash } from "lucide-react";
+import { Plus, X, Trash, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import VerticalToolbar from "./VerticalToolbar";
 import ConversationGroup from "./ConversationGroup";
 import useEditorStore from "../inspector/store";
@@ -139,6 +139,11 @@ const SceneSetup = forwardRef(
     
     const [show360View, setShow360View] = useState(false);
     const [availableParties, setAvailableParties] = useState([]);
+    
+    // Zoom state for scene canvas
+    const [zoom, setZoom] = useState(1);
+    const sceneContentRef = useRef(null);
+    const sceneContainerRef = useRef(null);
 
     // Add effect to load and sync availableParties with savedParties
     useEffect(() => {
@@ -316,11 +321,44 @@ const SceneSetup = forwardRef(
     }, [activeSceneIndex, scenes, setScenes, selectedBoxId]); // Add dependencies to handle scene changes
 
     // Various refs
-    const sceneContainerRef = useRef(null);
     const fileInputRef = useRef(null);
     // const avatarInstancesRef = useRef({});
     const previousActiveSceneRef = useRef(null);
     const initializedScenesRef = useRef(new Set());
+
+    // Zoom handlers for scene canvas
+    const handleZoom = (direction) => {
+      setZoom(prevZoom => {
+        const newZoom = direction === 'in' 
+          ? Math.min(prevZoom + 0.2, 3) 
+          : Math.max(prevZoom - 0.2, 0.5);
+        return newZoom;
+      });
+    };
+    
+    const handleMouseWheel = (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.2 : 0.2;
+      setZoom(prevZoom => {
+        const newZoom = Math.min(Math.max(prevZoom + delta, 0.5), 3);
+        return newZoom;
+      });
+    };
+    
+    const resetZoom = () => {
+      setZoom(1);
+    };
+    
+    // Add zoom event listener
+    useEffect(() => {
+      const container = sceneContainerRef.current;
+      if (container) {
+        container.addEventListener('wheel', handleMouseWheel, { passive: false });
+        return () => container.removeEventListener('wheel', handleMouseWheel);
+      }
+    }, []);
 
     // Add handler function for emoji state changes
     const handleEmojiStateChange = (newEmojiStates) => {
@@ -1245,7 +1283,7 @@ const SceneSetup = forwardRef(
           {/* Scene background */}
           <div
             ref={sceneContainerRef}
-            className="scene-background w-full relative overflow-hidden"
+            className="scene-background w-full relative overflow-auto"
             style={{
               aspectRatio: currentScene?.isAvatarConfig ? "4/3" : "16/9",
               maxHeight: "300px",
@@ -1271,42 +1309,73 @@ const SceneSetup = forwardRef(
           >
             {currentScene && (
               <>
-                {/* Toggle 360 view button */}
-                {/* {currentScene.backgroundImage && (
+                {/* Zoom Controls */}
+                <div className="absolute top-2 right-2 z-20 flex gap-2 bg-black bg-opacity-50 rounded-lg p-2">
                   <button
-                    onClick={() => setShow360View(true)}
-                    className="absolute top-2 right-2 z-10 theme-bg-primary theme-bg-opacity-75 px-3 py-1 rounded-md 
-                   hover:bg-opacity-100 transition-all flex items-center gap-2 theme-text-primary"
+                    onClick={() => handleZoom('in')}
+                    className="p-2 hover:bg-opacity-75 bg-blue-600 rounded transition-colors text-white"
+                    title="Zoom In (Ctrl+Scroll)"
+                    aria-label="Zoom in"
                   >
-                    <span>View in 360°</span>
+                    <ZoomIn className="w-4 h-4" />
                   </button>
-                )} */}
+                  <div className="flex items-center px-2 text-white text-xs font-medium min-w-12 justify-center">
+                    {Math.round(zoom * 100)}%
+                  </div>
+                  <button
+                    onClick={() => handleZoom('out')}
+                    className="p-2 hover:bg-opacity-75 bg-blue-600 rounded transition-colors text-white"
+                    title="Zoom Out (Ctrl+Scroll)"
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={resetZoom}
+                    className="p-2 hover:bg-opacity-75 bg-blue-600 rounded transition-colors text-white"
+                    title="Reset Zoom"
+                    aria-label="Reset zoom"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
 
-                {/* Render conversation boxes */}
-                {currentScene.boxes.map((box) => (
-                  <ConversationGroup
-                    key={box.id}
-                    box={box}
-                    selectedBoxId={selectedBoxId}
-                    onSelectBox={setSelectedBoxId}
-                    onDeleteBox={onDeleteBox}
-                    onUpdateElementCount={onUpdateElementCount}
-                    onUpdateElementType={onUpdateElementType}
-                    onDeleteElement={onDeleteElement}
-                    onMouseDown={onMouseDown}
-                    onResizeStart={onResizeStart}
-                    avatarInstancesRef={avatarInstancesRef}
-                    loadingBoxIds={loadingBoxIds}
-                    onDrop={onDrop}
-                    onContentDrop={onContentDrop}
-                    availableParties={availableParties}
-                    onAssignParty={onAssignParty}
-                    currentScene={currentScene}
-                    emojiStates={emojiStates}
-                    speakingInfo={speakingInfo}
-                    messages={messages}
-                  />
-                ))}
+                {/* Zoomable content container */}
+                <div
+                  ref={sceneContentRef}
+                  className="w-full h-full relative"
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: 'top center',
+                    transition: 'transform 0.1s ease-out'
+                  }}
+                >
+                  {/* Render conversation boxes */}
+                  {currentScene.boxes.map((box) => (
+                    <ConversationGroup
+                      key={box.id}
+                      box={box}
+                      selectedBoxId={selectedBoxId}
+                      onSelectBox={setSelectedBoxId}
+                      onDeleteBox={onDeleteBox}
+                      onUpdateElementCount={onUpdateElementCount}
+                      onUpdateElementType={onUpdateElementType}
+                      onDeleteElement={onDeleteElement}
+                      onMouseDown={onMouseDown}
+                      onResizeStart={onResizeStart}
+                      avatarInstancesRef={avatarInstancesRef}
+                      loadingBoxIds={loadingBoxIds}
+                      onDrop={onDrop}
+                      onContentDrop={onContentDrop}
+                      availableParties={availableParties}
+                      onAssignParty={onAssignParty}
+                      currentScene={currentScene}
+                      emojiStates={emojiStates}
+                      speakingInfo={speakingInfo}
+                      messages={messages}
+                    />
+                  ))}
+                </div>
 
                 {/* 360 Viewer */}
 

@@ -35,6 +35,22 @@ interface PartyInfo {
   turnMode: string | null;
 }
 
+const DEFAULT_SCENE_DESCRIPTION =
+  "Single-scene FNOL intake where Alice asks structured insurance questions and Bob reports the accident details. Capture policy and vehicle identifiers, reporter identity/contact, accident circumstances, driver scope, other-party/police/witness information, injuries, property damage, liability indicators, exclusions and fraud signals, then close with missing documents and clear next steps.";
+
+const normalizeSceneDescription = (text: string, sceneName?: string): string => {
+  const source = String(text || "").trim();
+  if (!source) return source;
+
+  if (sceneName) {
+    const escaped = sceneName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const scenePrefix = new RegExp(`^Conversation context for\\s+${escaped}\\.\\s*`, "i");
+    return source.replace(scenePrefix, "").trim();
+  }
+
+  return source.replace(/^Conversation context for\s+[^.]+\.\s*/i, "").trim();
+};
+
 const SceneSelector: React.FC<SceneSelectorProps> = ({ snippetNode, onSceneChange, onDescriptionGenerated }) => {
   const { scenes, activeSceneId, setActiveSceneId, updateNode, updateSelectedItem, updateSnippetNode } = useEditorStore() as EditorState;
   const [description, setDescription] = useState<string>("");
@@ -45,10 +61,20 @@ const SceneSelector: React.FC<SceneSelectorProps> = ({ snippetNode, onSceneChang
   // When the scene changes, update the description
   useEffect(() => {
     if (snippetNode.description) {
-      setDescription(snippetNode.description);
+      const normalized = normalizeSceneDescription(
+        snippetNode.description,
+        snippetNode.attachedScene?.name
+      );
+      setDescription(normalized);
+      if (snippetNode.id && normalized !== snippetNode.description) {
+        updateNode(snippetNode.id, { description: normalized });
+      }
     } else if (snippetNode.attachedScene) {
-      // Generate a description if none exists
-      generateDescription();
+      // Seed a predefined default description for newly attached scenes.
+      setDescription(DEFAULT_SCENE_DESCRIPTION);
+      if (snippetNode.id) {
+        updateNode(snippetNode.id, { description: DEFAULT_SCENE_DESCRIPTION });
+      }
     } else {
       setDescription("");
     }
@@ -149,12 +175,12 @@ const SceneSelector: React.FC<SceneSelectorProps> = ({ snippetNode, onSceneChang
       
     } catch (error) {
       console.error('Error fetching scene description:', error);
-      setDescription(`A conversation about ${snippetNode.attachedScene.name}`);
+      setDescription(DEFAULT_SCENE_DESCRIPTION);
       
       // Set a fallback description
       if (snippetNode.id) {
         updateNode(snippetNode.id, { 
-          description: `A conversation about ${snippetNode.attachedScene.name}` 
+          description: DEFAULT_SCENE_DESCRIPTION 
         });
         
         // Call the callback even with fallback description

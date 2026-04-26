@@ -111,12 +111,23 @@ export const setupSceneEventListeners = (
         initializeSceneAvatars(event.detail.sceneId, scenes);
       }
     } else if (event.detail.source === 'nodeeditor' && !event.detail.context) {
-      // Only switch to experience mode when coming from nodeeditor without explicit context
-      setMode('experience');
-      setShowTopicPanel(false);
-      setShowPreview(false);
-      setShowSceneView(false);
-      console.log('Setting experience mode based on nodeeditor source');
+      // Check if we're coming from the scene library/avatar config panel
+      // If so, stay in authoring mode. Only switch to experience mode when playing from the node editor
+      if (event.detail.fromSceneLibrary) {
+        // Coming from DraggableScenes with a scene setup context
+        console.log('Scene selected from library - maintaining authoring mode');
+        setMode('authoring');
+        setShowAvatarPanel(true);
+        setEditAvatar(true);
+        setShowSceneView(false);
+      } else {
+        // Coming from node editor to play - switch to experience mode
+        setMode('experience');
+        setShowTopicPanel(false);
+        setShowPreview(false);
+        setShowSceneView(false);
+        console.log('Setting experience mode based on nodeeditor source');
+      }
     } else if (event.detail.source === 'experience-modal') {
       // Always switch to experience mode for experience-modal source
       setMode('experience');

@@ -226,12 +226,20 @@ export class AudioPlaybackAdapter {
         if (targetScene || scene) {
           // Update with the found scene or fallback to the provided scene
           const sceneToActivate = targetScene || scene;
+          const nextScenes = scenes.some(s => s.id === sceneToActivate.id)
+            ? scenes
+            : [...scenes, sceneToActivate];
+
+          if (!scenes.some(s => s.id === sceneToActivate.id)) {
+            setScenes(nextScenes);
+          }
+
           setActiveSceneId(sceneToActivate.id);
           
           // Broadcast an event for scene update
           window.dispatchEvent(new CustomEvent('editor-scenes-updated', {
             detail: {
-              scenes: scenes,
+              scenes: nextScenes,
               activeSceneId: sceneToActivate.id,
               source: 'audio-playback-adapter',
               initiator: true,
@@ -289,9 +297,46 @@ export class AudioPlaybackAdapter {
         } else {
           // Fallback - we couldn't find the scene in the store or load it
           console.warn(`Could not find or load scene: ${scene.id}, using fallback approach`);
-          
-          // Set active scene id directly
+
+          const nextScenes = scenes.some(s => s.id === scene.id)
+            ? scenes
+            : [...scenes, scene];
+
+          if (!scenes.some(s => s.id === scene.id)) {
+            setScenes(nextScenes);
+          }
+
           setActiveSceneId(scene.id);
+
+          window.dispatchEvent(new CustomEvent('editor-scenes-updated', {
+            detail: {
+              scenes: nextScenes,
+              activeSceneId: scene.id,
+              source: 'audio-playback-adapter',
+              initiator: true,
+              forceRefresh: true
+            }
+          }));
+
+          window.dispatchEvent(new CustomEvent('show-scene-in-editor', {
+            detail: {
+              sceneId: scene.id,
+              sceneName: scene.name,
+              source: 'audio-playback-adapter',
+              context: 'playback',
+              mode: 'playback',
+              eventId: `scene-activation-fallback-${Date.now()}`,
+              timestamp: Date.now(),
+              initializeAvatars: true,
+              maintainMode: true,
+              setEditAvatar: true,
+              forceRefresh: true
+            }
+          }));
+
+          setTimeout(() => {
+            resolve(true);
+          }, 800);
           
         }
       } catch (error) {
@@ -314,9 +359,13 @@ export class AudioPlaybackAdapter {
         const statusResp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LLM_STATUS}`);
         if (statusResp.ok) {
           const status = await statusResp.json();
-          if (!status.geminiConfigured) {
-            alert('Please set your Gemini API key first.');
-            return Promise.reject(new Error('Gemini API key not configured'));
+          // Check if the current provider is configured (instead of hardcoding Gemini)
+          const currentProvider = status.currentProvider || 'gemini';
+          const isConfigured = status[`${currentProvider}Configured`] || false;
+          
+          if (!isConfigured) {
+            alert(`Please configure ${currentProvider.toUpperCase()} API first.`);
+            return Promise.reject(new Error(`${currentProvider} API key not configured`));
           }
         }
       } catch (e) {
@@ -500,20 +549,45 @@ export const createAudioPlaybackConfig = (node) => {
     });
   }
   
+  const participantConfigByName = {};
+  try {
+    const rawParticipants = localStorage.getItem('topicPanel-participants');
+    if (rawParticipants) {
+      const parsedParticipants = JSON.parse(rawParticipants);
+      if (Array.isArray(parsedParticipants)) {
+        parsedParticipants.forEach((p) => {
+          if (p && p.name) participantConfigByName[p.name] = p;
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse topicPanel-participants from localStorage:', e);
+  }
+
+  const explicitPrompt = (node.conversationPrompt || '').trim();
+  const sceneGroundingText = (node.description || '').trim();
+  const groundedPrompt = explicitPrompt || sceneGroundingText || null;
+  const topicText = (node.topic || '').trim();
+  const groundedTopic =
+    topicText && topicText.toLowerCase() !== 'general conversation'
+      ? topicText
+      : (node.subTopic || '').trim() || (sceneGroundingText ? sceneGroundingText.slice(0, 180) : 'general conversation');
+
   // Extract speakers from the node
   let agents = [];
   if (node.speakers) {
     agents = node.speakers.map(speaker => {
       // Try to get avatar data from the scene
       const avatarData = participantAvatarData[speaker.name] || {};
+      const participantConfig = participantConfigByName[speaker.name] || {};
       
       return {
         name: speaker.name,
-        personality: speaker.personality || "friendly",
+        personality: speaker.personality || participantConfig.personality || avatarData.personality || "friendly",
         interactionPattern: node.interactionPattern || "neutral",
         isHumanProxy: false,
         voiceSettings: {
-          voice: avatarData.voice || speaker.voice || "en-GB-Standard-A",
+          voice: avatarData.voice || speaker.voice || participantConfig.voice || "en-GB-Standard-A",
           language: "en-GB"
         },
         avatarSettings: {
@@ -521,12 +595,13 @@ export const createAudioPlaybackConfig = (node) => {
           elementId: avatarData.elementId || avatarData.boxId
         },
         customAttributes: {
+          ...(participantConfig.customAttributes || {}),
           ...(speaker.customAttributes || {}),
           party: speaker.party || null,
           isPartyRepresentative: speaker.isPartyRepresentative || false
         },
-        fillerWordsFrequency: "low",
-        roleDescription: speaker.roleDescription || ""
+        fillerWordsFrequency: speaker.fillerWordsFrequency || participantConfig.fillerWordsFrequency || "low",
+        roleDescription: speaker.roleDescription || participantConfig.roleDescription || avatarData.roleDescription || ""
       };
     });
   } else {
@@ -536,19 +611,22 @@ export const createAudioPlaybackConfig = (node) => {
       
       return {
         name: name,
-        personality: "friendly",
+        personality: avatarData.personality || participantConfigByName[name]?.personality || "friendly",
         interactionPattern: "neutral",
         isHumanProxy: false,
         voiceSettings: {
-          voice: avatarData.voice || "en-GB-Standard-A",
+          voice: avatarData.voice || participantConfigByName[name]?.voice || "en-GB-Standard-A",
           language: "en-GB"
         },
         avatarSettings: {
           model: avatarData.url || "/assets/avatar1.glb",
           elementId: avatarData.elementId || avatarData.boxId
         },
-        customAttributes: {},
-        fillerWordsFrequency: "low"
+        customAttributes: {
+          ...(participantConfigByName[name]?.customAttributes || {})
+        },
+        fillerWordsFrequency: participantConfigByName[name]?.fillerWordsFrequency || "low",
+        roleDescription: participantConfigByName[name]?.roleDescription || avatarData.roleDescription || ""
       };
     });
   }
@@ -563,7 +641,7 @@ export const createAudioPlaybackConfig = (node) => {
     // Add participants array to avoid "filter" TypeError in the server
     participants: participants,
     initiator: node.initiator?.name || (node.speakers.length > 0 ? node.speakers[0].name : null),
-    topic: node.topic || node.objective || "general conversation",
+    topic: groundedTopic || node.objective || "general conversation",
     subTopic: node.subTopic || "",
     interactionPattern: node.interactionPattern || "neutral",
     turnTakingMode: node.turnTakingMode || "round-robin",
@@ -571,7 +649,7 @@ export const createAudioPlaybackConfig = (node) => {
     derailerCommands: [], // Initialize empty derailer commands array
     shouldLoadPreviousConversationManager: false,
     conversationMode: useEditorStore.getState().conversationMode,
-    conversationPrompt: node.conversationPrompt || null
+    conversationPrompt: groundedPrompt
   };
 
   // Add party configuration if needed

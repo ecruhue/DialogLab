@@ -395,7 +395,7 @@ const SelectionBar = ({
                 <div className="flex items-center text-xs text-gray-500 space-x-2">
                   <span className="truncate">{avatarConfig.voice}</span>
                   <span>•</span>
-                  <span>{avatarConfig.settings.mood}</span>
+                  <span>{avatarConfig?.settings?.mood || 'neutral'}</span>
                 </div>
               </div>
             </div>

@@ -162,7 +162,7 @@ const Header = ({ mode, setMode, onOpenKeys }) => {
       <div className="flex h-full px-5 relative">
         {/* Left section */}
         <div className="flex items-center gap-3">
-          <span className="text-base font-bold text-gray-900">DialogLab</span>
+          <span className="text-base font-bold text-gray-900">VOX LAB</span>
           <span className="text-gray-400">|</span>
           <span className="text-sm text-gray-500">v1.0.0</span>
         </div>

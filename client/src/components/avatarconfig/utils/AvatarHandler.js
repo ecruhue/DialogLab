@@ -168,9 +168,11 @@ export const initializeAvatar = async (boxId, persona, avatarInstancesRef) => {
     const { TalkingHead } = await import("talkinghead");
     console.log("Creating TalkingHead with URL:", persona.url);
 
+    const ttsSpeaker = encodeURIComponent(persona?.name || boxId || "unknown");
+
     const instance = new TalkingHead(container, {
       height: boxHeight,
-      ttsEndpoint: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TTS}`,
+      ttsEndpoint: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TTS}/${ttsSpeaker}`,
       ttsApikey: localStorage.getItem('TTS_API_KEY') || null,
       lipsyncModules: ["en"],
     });

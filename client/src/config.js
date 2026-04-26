@@ -3,12 +3,19 @@
  */
 
 const isProduction = window.location.hostname !== 'localhost' && 
-                    window.location.hostname !== '127.0.0.1';
+                    window.location.hostname !== '127.0.0.1' &&
+                    !window.location.hostname.includes('.github.dev') &&  // GitHub Codespace
+                    !window.location.hostname.includes('.gitpod.io') &&   // Gitpod
+                    window.location.hostname !== 'localhost:3010';
 
 // API configuration
 export const API_CONFIG = {
-  // Use chatlab.3dvar.com in production, localhost in development
-  BASE_URL: isProduction ? 'https://chatlab.3dvar.com' : 'http://localhost:3010',
+  // Use chatlab.3dvar.com in production, localhost in development/codespace
+  BASE_URL: isProduction ? 'https://chatlab.3dvar.com' : (
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? `${window.location.protocol}//${window.location.hostname}:3010`  // Local development
+      : window.location.origin  // GitHub Codespace or Gitpod (port already in domain)
+  ),
   
   // API endpoints
   ENDPOINTS: {

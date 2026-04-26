@@ -78,7 +78,7 @@ export function setupModelRoutes(app) {
 
   /**
    * POST /api/llm-keys - Set API keys for providers
-   * { provider: 'openai'|'gemini', apiKey: '...' }
+   * { provider: 'openai'|'gemini'|'azure', apiKey: '...' }
    */
   app.post("/api/llm-keys", (req, res) => {
     try {
@@ -93,6 +93,7 @@ export function setupModelRoutes(app) {
         }
       } else if (provider === 'gemini') {
         setGeminiApiKey(apiKey);
+      } else if (provider === 'azure') {
       } else if (provider === 'tts') {
         setTtsApiKey(apiKey);
       } else {
@@ -118,6 +119,7 @@ export function setupModelRoutes(app) {
         status: 'success',
         geminiConfigured: isGeminiConfigured(),
         openaiConfigured: typeof llmProvider.isOpenAIConfigured === 'function' ? llmProvider.isOpenAIConfigured() : false,
+        azureConfigured: typeof llmProvider.isAzureConfigured === 'function' ? llmProvider.isAzureConfigured() : false,
         ttsConfigured: isTtsConfigured(),
         currentProvider: typeof llmProvider.getProvider === 'function' ? llmProvider.getProvider() : 'gemini'
       });
@@ -129,13 +131,13 @@ export function setupModelRoutes(app) {
 
   /**
    * POST /api/llm-provider - Set the active LLM provider
-   * { provider: 'openai'|'gemini' }
+   * { provider: 'openai'|'gemini'|'azure' }
    */
   app.post("/api/llm-provider", (req, res) => {
     try {
       const { provider } = req.body || {};
-      if (!provider || !['openai', 'gemini'].includes(provider)) {
-        return res.status(400).json({ status: 'error', message: 'provider must be "openai" or "gemini"' });
+      if (!provider || !['openai', 'gemini', 'azure'].includes(provider)) {
+        return res.status(400).json({ status: 'error', message: 'provider must be "openai", "gemini", or "azure"' });
       }
       if (typeof llmProvider.setProvider === 'function') {
         llmProvider.setProvider(provider);
@@ -144,6 +146,62 @@ export function setupModelRoutes(app) {
     } catch (error) {
       console.error('Error setting provider:', error);
       return res.status(500).json({ status: 'error', message: 'Failed to set provider' });
+    }
+  });
+
+  /**
+   * POST /api/azure-config - Configure Azure OpenAI
+   * { endpoint: '...', apiKey: '...', deployment: '...', apiVersion: '...' }
+   */
+  app.post("/api/azure-config", (req, res) => {
+    try {
+      const { endpoint, apiKey, deployment = 'gpt-5.4-nano', apiVersion = '2024-12-01-preview' } = req.body || {};
+      
+      if (!endpoint || !apiKey) {
+        return res.status(400).json({ 
+          status: 'error', 
+          message: 'endpoint and apiKey are required' 
+        });
+      }
+
+      if (typeof llmProvider.configureAzureOpenAI === 'function') {
+        const success = llmProvider.configureAzureOpenAI(endpoint, apiKey, deployment, apiVersion);
+        if (success) {
+          return res.json({ 
+            status: 'success', 
+            message: 'Azure OpenAI configured successfully',
+            config: llmProvider.getAzureConfig()
+          });
+        } else {
+          return res.status(400).json({ 
+            status: 'error', 
+            message: 'Failed to configure Azure OpenAI' 
+          });
+        }
+      }
+
+      return res.status(400).json({ status: 'error', message: 'Azure configuration not available' });
+    } catch (error) {
+      console.error('Error configuring Azure OpenAI:', error);
+      return res.status(500).json({ status: 'error', message: 'Failed to configure Azure' });
+    }
+  });
+
+  /**
+   * GET /api/azure-config - Get current Azure OpenAI configuration
+   */
+  app.get("/api/azure-config", (req, res) => {
+    try {
+      if (typeof llmProvider.getAzureConfig === 'function') {
+        return res.json({ 
+          status: 'success', 
+          config: llmProvider.getAzureConfig()
+        });
+      }
+      return res.status(400).json({ status: 'error', message: 'Azure configuration not available' });
+    } catch (error) {
+      console.error('Error getting Azure config:', error);
+      return res.status(500).json({ status: 'error', message: 'Failed to get Azure config' });
     }
   });
 } 

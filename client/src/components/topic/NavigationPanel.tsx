@@ -25,7 +25,7 @@ const nameGenderMap: Record<string, 'male' | 'female'> = {
 
 // Fixed Avatar URL paths by name (gender-consistent)
 const nameAvatarMap: Record<string, string> = {
-  // 'Alice': '/assets/p-f-a2.glb',
+  // 'Alice': '/assets/female-avatar1.glb',
   'Alice': '/assets/female-avatar1.glb',
   // 'Bob': '/assets/p-m-a4.glb',
   'Bob': '/assets/male-avatar1.glb',

@@ -1,5 +1,9 @@
 import dotenv from "dotenv";
 import * as llmProvider from "./providers/llmProvider.js";
+import {
+  shouldUseTavilyForInsuranceAutoContext,
+  tavilyInsuranceLookup,
+} from "./tavilyService.js";
 dotenv.config();
 
 async function generateDynamicAttributeContext(customAttributes) {
@@ -74,6 +78,8 @@ class Agent {
       if (this.isHumanProxy) {
         return { requiresHumanInput: true, speaker: this.name };
       }
+
+      const toolUsage = [];
   
       const attributeContext =
         this.customAttributes && Object.keys(this.customAttributes).length > 0
@@ -98,6 +104,37 @@ class Agent {
           derailerContext = "Respond to the emotional subtext rather than the content, changing the conversation's emotional tone.";
         }
       }
+
+      let tavilyContext = "";
+      const shouldUseTavily = shouldUseTavilyForInsuranceAutoContext({
+        message,
+        context,
+        roleDescription: this.roleDescription,
+        customAttributes: this.customAttributes,
+      });
+
+      if (shouldUseTavily) {
+        const tavilyResult = await tavilyInsuranceLookup({
+          message,
+          context,
+          roleDescription: this.roleDescription,
+          agentName: this.name,
+        });
+
+        if (tavilyResult.status === "ok" && tavilyResult.summary) {
+          tavilyContext = `\nVerified external insurance details (Tavily): ${tavilyResult.summary}`;
+        }
+
+        if (tavilyResult.status !== "skipped") {
+          toolUsage.push({
+            tool: "tavily_insurance_lookup",
+            status: tavilyResult.status,
+            latencyMs: tavilyResult.latencyMs || 0,
+            queryPreview: tavilyResult.query ? tavilyResult.query.slice(0, 160) : "",
+            sourceCount: Array.isArray(tavilyResult.sources) ? tavilyResult.sources.length : 0,
+          });
+        }
+      }
   
       const prompt = `You are ${this.name}, a ${this.personality} person. ${attributeContext} 
             ${this.roleDescription ? "Role: " + this.roleDescription : ""}
@@ -105,6 +142,7 @@ class Agent {
             ${isStartingMessage && message !== "This is the first scene" ? "briefly summarize what happened in the last scene and transition to the current context (use 1-2 sentences): " : ""}
             ${derailerContext}
             ${context}
+            ${tavilyContext}
             ${interruptionContext}
             ${!isStartingMessage ? `Last message: ${message}` : ""}
            
@@ -133,15 +171,17 @@ class Agent {
             fullResponse,
             interrupted: true,
             partialResponse: fullResponse.slice(0, interruptPoint),
+            toolUsage,
           };
         }
   
-        return { fullResponse, interrupted: false };
+        return { fullResponse, interrupted: false, toolUsage };
       } catch (error) {
         console.error("Error in reply method:", error);
         return {
           fullResponse: "Sorry, I couldn't generate a response.",
           interrupted: false,
+          toolUsage,
         };
       }
     }

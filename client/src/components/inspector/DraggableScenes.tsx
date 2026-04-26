@@ -119,6 +119,20 @@ const DraggableScenes: React.FC = () => {
     
     // Dispatch the event on the document so other components can listen for it
     document.dispatchEvent(event);
+    
+    // Also dispatch a show-scene-in-editor event with context to preserve authoring mode
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('show-scene-in-editor', {
+        detail: {
+          sceneId: scene.id,
+          sceneName: scene.name,
+          source: 'draggable-scenes',
+          context: 'authoring',
+          fromSceneLibrary: true,
+          maintainMode: false
+        }
+      }));
+    }, 100);
   };
 
   const handleDoubleClick = (scene: Scene, e: React.MouseEvent) => {

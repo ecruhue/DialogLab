@@ -1011,6 +1011,14 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({
       onMouseOut={handleNodeMouseOut}
       onContextMenu={handleContextMenu}
     >
+      {/* Tooltip with description */}
+      {node.description && (
+        <title>{node.title}\n\n{node.description}</title>
+      )}
+      {!node.description && (
+        <title>{node.title}</title>
+      )}
+      
       {/* Focus highlight effect */}
       {shouldHighlight && (
         <rect

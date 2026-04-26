@@ -14,6 +14,7 @@ import { setupModelRoutes } from "./modelAPI.js";
 import ContentManager from "./contentManager.js";
 import { setupContentRoutes } from "./contentAPI.js";
 import { setupVerificationRoutes } from "./verificationAPI.js";
+import { setupTavilyRoutes, setTavilyApiKey } from "./tavilyService.js";
 
 
 dotenv.config();
@@ -70,6 +71,9 @@ setupContentRoutes(app);
 
 // Setup verification routes
 setupVerificationRoutes(app);
+
+// Setup Tavily tool routes
+setupTavilyRoutes(app);
 
 let conversationManager, conversationMemory;
 
@@ -507,21 +511,40 @@ app.post('/api/generate-scene-description', async (req, res) => {
       }
     }
     
+    const hasAlice = speakers && Array.isArray(speakers)
+      ? speakers.some((s) => String(s?.name || '').toLowerCase() === 'alice')
+      : false;
+    const hasBob = speakers && Array.isArray(speakers)
+      ? speakers.some((s) => String(s?.name || '').toLowerCase() === 'bob')
+      : false;
+
     // Prepare prompt for LLM
-    const prompt = `Generate a concise description for a conversation scene named "${sceneName}".
+    const prompt = `Generate a concise but practical description for ONE FNOL conversation scene named "${sceneName}".
     ${speakerNames ? `The scene includes the following participants: ${speakerNames}.` : ''}${partyContext}
-    
+
+    Role framing:
+    ${hasAlice ? '- Alice is the insurance intake assistant leading the interview.' : '- The assistant leads the insurance intake interview.'}
+    ${hasBob ? '- Bob is the accident reporter answering questions.' : '- The reporter answers with first-hand accident details.'}
+
     The description should:
-    1. Be one sentence long
-    2. Capture the essence of what the scene might be about based on its name
-    3. Be suitable as context for a natural conversation
-    4. Not include phrases like "In this scene" or "This scene is about"
-    ${partyContext ? '5. Consider the party dynamics mentioned above' : ''}
-    
-    Provide only the description text without any additional explanations or formatting.`;
+    1. Be 2-4 sentences.
+    2. Stay as ONE scene only (no phases, chapters, or separate scenes).
+    3. Describe a guided FNOL Q&A that systematically covers:
+       - policy and vehicle identification
+       - reporter identity/contact and relationship to policyholder
+       - accident date/time/location/conditions and free-form narrative
+       - driver validity/scope, impairments, and hit-and-run indicators
+       - other-party, police, witness, injury, and property-damage details
+       - liability indicators, exclusions/obligations, recourse and fraud signals
+       - settlement preferences, communication channel, and next required documents
+    4. End with explicit next steps and unresolved items.
+    5. Not include phrases like "In this scene" or "This scene is about".
+    ${partyContext ? '6. Consider the party dynamics mentioned above.' : ''}
+
+    Provide only the description text without markdown or extra commentary.`;
 
     // Get response from LLM
-    const description = await llmProvider.generateText(prompt, { maxTokens: 120, temperature: 0.7 });
+    const description = await llmProvider.generateText(prompt, { maxTokens: 220, temperature: 0.35 });
     
     console.log(`Generated scene description for "${sceneName}": ${description}`);
 
@@ -546,18 +569,37 @@ app.post('/api/generate-conversation-prompt', async (req, res) => {
       ? speakers.map(s => s.name).join(', ')
       : null;
     
-    // Prepare prompt for LLM
-    const prompt = `Create a situational context for a conversation using the following format:
-    "${speakerNames || 'The participants'} is in a conversation where ${sceneDescription}. They are talking about ${subTopic || 'various topics related to the scene'}."
+    // Prepare prompt for LLM (single-scene workflow only)
+    const prompt = `Write one single-scene conversation context for these speakers: ${speakerNames || 'participants'}.
 
-    The context should:
-    1. Naturally incorporate all the provided speakers: ${speakerNames || 'Not specified'}
-    2. Do not add any additional information about the topic, or participants
-    3. Reference the interaction style (${interactionPattern || 'neutral'}) through the tone
-    4. Be 1-2 sentences long and feel natural
-    5. Not include phrases like "In this scene" or "This scene is about"
+  Scene description:
+  ${sceneDescription}
 
-    Provide only the context text without any additional explanations or formatting.`;
+  Subtopic:
+  ${subTopic || 'policy and accident intake'}
+
+  Interaction style:
+  ${interactionPattern || 'neutral'}
+
+  Requirements:
+  1. Keep this as ONE scene only. Do not split into stages/scenes/chapters.
+  2. Frame it as a guided Q&A interview where Alice systematically asks and Bob answers.
+  3. Ensure the interview attempts to cover, in this one scene:
+     - policy and vehicle identification
+     - accident circumstances
+     - driver scope/eligibility and impairments
+     - other-party details
+     - police and witnesses
+     - injuries and property damage
+     - liability indicators
+     - coverage/exclusion and duty-of-disclosure checks
+     - fraud-signal checks
+     - settlement preferences and communication channel
+  4. End with explicit next steps and what evidence/documents are still needed.
+  5. Keep concise and practical (2-4 sentences). No markdown, no bullets.
+  6. Do not use the phrases "In this scene" or "This scene is about".
+
+  Return only the final context text.`;
 
     // Get response from LLM
     const conversationPrompt = await llmProvider.generateText(prompt, { maxTokens: 250, temperature: 0.7 });
@@ -1228,6 +1270,9 @@ if (process.env.GEMINI_API_KEY) {
 }
 if (process.env.TTS_API_KEY) {
   setTtsApiKey(process.env.TTS_API_KEY);
+}
+if (process.env.TAVILY_API_KEY) {
+  setTavilyApiKey(process.env.TAVILY_API_KEY);
 }
 
 // Initialize provider from environment

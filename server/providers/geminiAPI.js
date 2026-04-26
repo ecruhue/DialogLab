@@ -9,12 +9,12 @@ let CURRENT_API_KEY;
 let genAI = null;
 
 const GEMINI_MODELS = {          
-  FLASH_LITE: "gemini-2.0-flash-lite",
-  FLASH: "gemini-2.0-flash",
+  FLASH_LITE: "gemini-flash-lite-latest",
+  FLASH: "gemini-2.5-flash",
 };
 
 // Default model
-const DEFAULT_MODEL = GEMINI_MODELS.FLASH;
+const DEFAULT_MODEL = GEMINI_MODELS.FLASH_LITE;
 
 /**
  * Gets the appropriate Gemini model
@@ -79,7 +79,7 @@ async function readFileAsBytes(filepath) {
  * @param {string|object} options.contentAttachment - Optional content attachment to include with the prompt
  * @returns {Promise<string>} The generated text
  */
-async function generateText(prompt, options = {}) {
+async function generateText(prompt, options = {}, _retries = 1) {
   try {
     // Allow per-request API key by temporarily creating a client
     const modelName = options.model || DEFAULT_MODEL;
@@ -91,7 +91,7 @@ async function generateText(prompt, options = {}) {
     
     const generationConfig = {
       temperature: options.temperature || 0.7,
-      maxOutputTokens: options.maxTokens || 100,
+      maxOutputTokens: options.maxTokens ? options.maxTokens * 15 : 1500,
     };
 
     // Format the prompt for structured data if needed
@@ -141,6 +141,12 @@ async function generateText(prompt, options = {}) {
 
     return result.response.text();
   } catch (error) {
+    if (error.status === 429 && _retries > 0) {
+      const delay = 3000;
+      console.warn(`Gemini 429 rate limit, retrying in ${delay}ms (${_retries} retries left)`);
+      await new Promise(r => setTimeout(r, delay));
+      return generateText(prompt, options, _retries - 1);
+    }
     console.error("Error calling Gemini API:", error);
     throw error;
   }
@@ -155,7 +161,7 @@ async function generateText(prompt, options = {}) {
  * @param {string|object} options.contentAttachment - Optional content attachment to include with the chat
  * @returns {Promise<string>} The generated response
  */
-async function chatCompletion(messages, options = {}) {
+async function chatCompletion(messages, options = {}, _retries = 1) {
   try {
     const modelName = options.model || DEFAULT_MODEL;
     let client = genAI;
@@ -166,7 +172,7 @@ async function chatCompletion(messages, options = {}) {
     
     const generationConfig = {
       temperature: options.temperature || 0.7,
-      maxOutputTokens: options.maxTokens || 100,
+      maxOutputTokens: options.maxTokens ? options.maxTokens * 15 : 1500,
     };
 
     // Convert from OpenAI format to Gemini format
@@ -232,15 +238,13 @@ async function chatCompletion(messages, options = {}) {
     
     return result.response.text();
   } catch (error) {
-    console.error("Error calling Gemini Chat API:", error);
-    
-    // Try with legacy model if different model was specified
-    if (options.model && options.model !== GEMINI_MODELS.LEGACY_PRO) {
-      console.log("Retrying with legacy model...");
-      options.model = GEMINI_MODELS.LEGACY_PRO;
-      return chatCompletion(messages, options);
+    if (error.status === 429 && _retries > 0) {
+      const delay = 3000;
+      console.warn(`Gemini chat 429 rate limit, retrying in ${delay}ms (${_retries} retries left)`);
+      await new Promise(r => setTimeout(r, delay));
+      return chatCompletion(messages, options, _retries - 1);
     }
-    
+    console.error("Error calling Gemini Chat API:", error);
     throw error;
   }
 }

@@ -60,8 +60,8 @@ class ConversationMemory {
     async addMessage(message) {
       this.conversationHistory.push(message);
 
-      // Extract and track key points and analogies
-      await this.updateTracking(message);
+      // Extract and track key points and analogies (non-blocking)
+      this.updateTracking(message).catch(() => {});
   
       if (this.conversationHistory.length - this.lastSummaryIndex >= this.summaryInterval) {
         const messagesForSummary = this.conversationHistory.slice(
@@ -100,7 +100,8 @@ class ConversationMemory {
         const rawResponse = await llmProvider.generateText(prompt, { 
           maxTokens: 150, 
           temperature: 0.7,
-          requestJson: true 
+          requestJson: true,
+          model: 'gemini-2.5-flash-lite'
         });
         
         // Clean the response as a backup in case requestJson option wasn't effective
@@ -165,7 +166,7 @@ class ConversationMemory {
       Your summary should be brief but informative, focusing on the main ideas discussed.`;
       
       try {
-        return await llmProvider.generateText(prompt, { maxTokens: 100, temperature: 0.7 });
+        return await llmProvider.generateText(prompt, { maxTokens: 100, temperature: 0.7, model: 'gemini-2.5-flash-lite' });
       } catch (error) {
         console.error("Error generating recent messages summary:", error);
         // Fallback to a simple list if summarization fails

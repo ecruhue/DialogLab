@@ -222,10 +222,12 @@ const ExperienceMode = () => {
         
         console.log("TalkingHead library imported successfully");
         console.log("Creating TalkingHead with URL:", avatarConfig.url || "/assets/avatar1.glb");
+
+        const ttsSpeaker = encodeURIComponent(avatarConfig?.name || containerId || "unknown");
         
         const avatar = new TalkingHead(containerElement, {
           height: boxHeight,
-          ttsEndpoint: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TTS}`,
+          ttsEndpoint: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TTS}/${ttsSpeaker}`,
           ttsApikey: localStorage.getItem('TTS_API_KEY') || null,
           lipsyncModules: ["en"],
         });
@@ -466,7 +468,7 @@ const ExperienceMode = () => {
               // Fallback to speakText if playAudio is not available
               else if (typeof avatar.speakText === 'function') {
                 console.log("Using speakText fallback with:", audioEvent.text);
-                avatar.speakText(audioEvent.text || "");
+                avatar.speakText((audioEvent.text || "").replace(/\s+/g, ' ').replace(/\.\s+(?=[A-Z])/g, ', ').replace(/[;:](?=\s)/g, ',').trim());
               }
               // Last resort fallback
               else if (typeof avatar.speak === 'function') {
@@ -481,7 +483,7 @@ const ExperienceMode = () => {
             // If no audio URL but we have text, use speakText
             else if (audioEvent.text && typeof avatar.speakText === 'function') {
               console.log("Speaking text only:", audioEvent.text);
-              avatar.speakText(audioEvent.text);
+              avatar.speakText(audioEvent.text.replace(/\s+/g, ' ').replace(/\.\s+(?=[A-Z])/g, ', ').replace(/[;:](?=\s)/g, ',').trim());
             }
             
             // Add gesture animation if applicable

@@ -177,7 +177,8 @@ class ConversationManager {
       customAttributes,
       fillerWordsFrequency,
       isProactive,
-      roleDescription,
+      0.3, // default proactiveThreshold
+      roleDescription
     );
 
     if (proactiveSettings) {
@@ -1092,6 +1093,10 @@ class ConversationManager {
           recipient: nextSpeaker,
         isHumanInput: false
       };
+
+      if (Array.isArray(reply.toolUsage) && reply.toolUsage.length > 0) {
+        message.toolUsage = reply.toolUsage;
+      }
 
       // Add party information if in party mode
       if (this.partyMode) {

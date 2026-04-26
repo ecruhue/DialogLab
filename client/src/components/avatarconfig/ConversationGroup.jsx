@@ -601,13 +601,13 @@ const ConversationGroup = ({
               {/* Avatar container - Add speaking highlight here */}
               <div 
                 id={`avatar-container-${element.id}`} 
-                className={`absolute inset-0 bg-transparent select-none ${
+                className={`absolute inset-0 bg-transparent select-none cursor-pointer hover:opacity-80 transition-opacity ${
                   isSpeaking ? 'ring-2 ring-yellow-400 ring-opacity-75' : ''
                 }`}
                 style={{ 
                   userSelect: 'none',
                   transform: 'scale(0.9)',
-                  transition: 'box-shadow 0.3s ease-in-out, height 0.3s ease-in-out',
+                  transition: 'box-shadow 0.3s ease-in-out, height 0.3s ease-in-out, opacity 0.2s ease-in-out',
                   boxShadow: isSpeaking ? '0 0 0 3px rgba(250, 204, 21, 0.7)' : 'none',
                   borderRadius: isSpeaking ? '6px' : '0',
                   minHeight: '100%', // Ensure minimum height
@@ -615,6 +615,18 @@ const ConversationGroup = ({
                   overflow: 'visible', // Allow 3D content to be visible
                   zIndex: 1 // Ensure proper stacking
                 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Open the avatar inspector when clicked
+                  if (element.avatarData) {
+                    setSelectedItem({
+                      avatarConfig: element.avatarData,
+                      type: "avatar",
+                      id: element.id
+                    });
+                  }
+                }}
+                title="Click to edit avatar properties"
               />
               {loadingBoxIds.has(element.id) && (
                 <div className="absolute inset-0 flex items-center justify-center theme-bg-primary theme-bg-opacity-75">

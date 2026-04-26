@@ -69,6 +69,33 @@ export interface AvatarInstance {
   [key: string]: any;
 }
 
+const getSegmentText = (segment: AudioSegment): string => {
+  const payload = segment?.message as Message | string | undefined;
+
+  if (typeof payload === 'string') {
+    return payload.trim();
+  }
+
+  if (!payload) {
+    return '';
+  }
+
+  if (typeof payload.message === 'string' && payload.message.trim()) {
+    return payload.message.trim();
+  }
+
+  if (typeof payload.content === 'string' && payload.content.trim()) {
+    return payload.content.trim();
+  }
+
+  const nestedText = (payload as any).text;
+  if (typeof nestedText === 'string' && nestedText.trim()) {
+    return nestedText.trim();
+  }
+
+  return '';
+};
+
 /**
  * Validate the scene and return valid avatar elements
  */
@@ -126,11 +153,20 @@ export const validateScene = (currentScene: any, avatarInstancesRef: React.Mutab
 /**
  * Handle avatar speaking with gestures
  */
+const normalizeRealtimeSpeechText = (text: string) => {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/\.\s+(?=[A-Z])/g, ', ')
+    .replace(/[;:](?=\s)/g, ',')
+    .trim();
+};
+
 export const handleAvatarSpeaking = async (instance: AvatarInstance, text: string) => {
   try {
     console.log(`Avatar is speaking: ${instance.name || 'Unknown'}`);
 
-    const speakingPromise = instance.speakText(text);
+    const normalizedText = normalizeRealtimeSpeechText(text);
+    const speakingPromise = instance.speakText(normalizedText);
     
     // Add a small buffer before audio ends to prevent final gesture
     const bufferTime = 500; // 500ms buffer
@@ -557,8 +593,20 @@ export const exportToVerificationWithTTS = async (audioSegments: AudioSegment[],
     };
   }
   
-  // Filter out segments with invalid avatarId
-  const validSegments = audioSegments.filter(segment => segment && segment.avatarId);
+  // Filter out segments with invalid avatarId or missing text payload
+  const validSegments = audioSegments.filter(segment => {
+    if (!segment || !segment.avatarId) {
+      return false;
+    }
+
+    const text = getSegmentText(segment);
+    if (!text) {
+      console.warn('exportToVerificationWithTTS: Skipping segment with missing text', segment);
+      return false;
+    }
+
+    return true;
+  });
   
   if (validSegments.length === 0) {
     console.warn('exportToVerificationWithTTS: No valid segments after filtering');
@@ -583,13 +631,22 @@ export const exportToVerificationWithTTS = async (audioSegments: AudioSegment[],
         rate: 1.0,
         pitch: 0
       };
+
+      const text = getSegmentText(segment);
       
       return {
         segmentId: segment.avatarId + "-" + segment.start.toFixed(2),
-        text: segment.message?.message,
-        voiceSettings
+        text,
+        voiceSettings,
+        speakerName: segment.avatarName
       };
     });
+
+    console.log('[TTS Export] Prepared TTS segments:', segmentsForTTS.map(segment => ({
+      segmentId: segment.segmentId,
+      preview: segment.text.slice(0, 80),
+      voice: segment.voiceSettings.name,
+    })));
 
     // Send to server for batch processing
     const startTime = Date.now();
@@ -745,6 +802,10 @@ export const createNodeFromScene = (
   addNode: Function,
   setSelectedItem: Function
 ): void => {
+  const sceneName = String(scene?.name || scene?.title || "Untitled Scene").trim();
+  const defaultSceneDescription =
+    `Single-scene FNOL intake: Alice guides Bob through a structured insurance interview to capture policy and vehicle identifiers, who is reporting, accident timeline and location, loss narrative, driver eligibility, other-party and police/witness details, injuries, property damage, liability indicators, exclusions and duty-of-disclosure checks, fraud signals, and settlement preferences. End by listing missing evidence and clear next steps for claim handling.`;
+
   // Generate a unique ID for the new node
   const nodeId = `snippet-${Date.now()}`;
   
@@ -859,16 +920,21 @@ export const createNodeFromScene = (
   const newNode = {
     id: nodeId,
     type: "snippet",
-    title: "", // Let the default title be set by the SnippetInspector
+    title: scene?.title || sceneName,
     x,
     y,
     isScripted: false,
+    objective: scene?.objective || sceneName,
     speakers: nodeSpeakers,
     initiator: selectInitiator(nodeSpeakers, scene),
-    subTopic: scene.name, // Use scene name as initial subtopic
-    turns: 3, // Default number of turns
-    interactionPattern: "neutral", // Default interaction pattern
-    turnTakingMode: "round-robin", // Default turn-taking mode
+    subTopic: sceneName,
+    turns: typeof scene?.turns === 'number' ? scene.turns : 10,
+    interactionPattern: scene?.interactionPattern || "supportive",
+    turnTakingMode: scene?.turnTakingMode || "round-robin",
+    description: scene?.description || defaultSceneDescription,
+    conversationPrompt: scene?.conversationPrompt || "",
+    partyMode: Boolean(scene?.globalPartySettings),
+    partyTurnMode: scene?.globalPartySettings?.partyTurnMode || 'free',
     attachedScene: scene // Attach the dragged scene
   };
 
